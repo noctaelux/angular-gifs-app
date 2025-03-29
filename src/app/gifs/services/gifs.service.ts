@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '@environments/environment';
 import { GiphyResponse } from '../interfaces/giphy.interface';
 import { Gif } from '../interfaces/gif.interface';
 import { GifMapper } from '../mapper/gif.mapper';
+import { map, tap } from 'rxjs';
 
 @Injectable({providedIn: 'root'})
 export class GifService {
@@ -13,6 +14,9 @@ export class GifService {
   trendingGifs = signal<Gif[]>([]);
 
   trendingGifsLoading = signal(true);
+
+  searchHistory = signal<Record<string,Gif[]>>({});
+  searchHistoryKeys = computed( () => Object.keys(this.searchHistory() ));
 
   constructor(){
     this.loadTrendingGifs();
@@ -34,6 +38,31 @@ export class GifService {
 
     } );
 
+  }
+
+  //https://api.giphy.com/v1/gifs/search?api_key=NNDYiGi74UNaqwkgHIApTqZyvycQtSpO&q=dragon+ball&limit=25&offset=0&rating=g&lang=en&bundle=messaging_non_clips
+  searchGifs( query: string ){
+
+    return this.http.get<GiphyResponse>(`${environment.giphyUrl}/gifs/search`,{
+      params: {
+        api_key: environment.giphyApiKey,
+        q: query,
+        limit: 20
+      }
+    })
+    .pipe(
+      map( ({ data }) => GifMapper.mapGiphyItemsToGifArray(data) ),
+      tap( (items) => {
+        this.searchHistory.update( (history) => ({
+          ... history,
+          [query.toLowerCase()]: items,
+        }) )
+      } ),
+    );
+  }
+
+  getHistoryGifs(query: string):Gif[]{
+    return this.searchHistory()[query] ?? [];
   }
 
 }
