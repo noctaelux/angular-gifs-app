@@ -2,6 +2,10 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.4.
 
+## Azure website
+
+This application is hosted on Azure Static Web App [Gifs App](https://gray-grass-085c6220f.6.azurestaticapps.net)
+
 ## Development server
 
 To start a local development server, run:
